@@ -250,6 +250,133 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://jiangyuea.github.io/Blog/Blog/2017/04/01/Android应用安全风险与防范/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="JiangYueA">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/Blog/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="JiangYueA·Notes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/Blog/2017/04/01/Android应用安全风险与防范/" itemprop="url">
+                  Android应用安全风险与防范
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-01T13:50:31+08:00">
+                2017-04-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="代码混淆"><a href="#代码混淆" class="headerlink" title="代码混淆"></a>代码混淆</h2><p>Android容易被apktool等类似的反编译工具，通过按转包获取源代码，Google为Android提供了ProGuard混淆方案，增加反编译后源码阅读难度；还有付费班的DexGuard混淆，包含资源混淆，字符串加密，类加密和dex文件分割等；<br>关于ProGuard，详见：<a href="https://www.guardsquare.com/en/proguard；" target="_blank" rel="external">https://www.guardsquare.com/en/proguard；</a><br>关于DexGuard，详见：<a href="https://www.guardsquare.com/en/dexguard" target="_blank" rel="external">https://www.guardsquare.com/en/dexguard</a></p>
+<h2 id="签名校验"><a href="#签名校验" class="headerlink" title="签名校验"></a>签名校验</h2><p>防止Android apk被二次打包/重打包；<br>1.对正版apk进行apktool类逆袭工具进行解包；<br>2.在某地方进行注入smali代码；<br>3.利用IDE生成签名文件，再通过jarsigner进行签名；<br>4.上传应用市场；<br>可以考虑加签名校验代码:<br>1.在JNI层加校验代码，相比在Java层，JNI逆向难度更大；<br>2.Java层加校验代码时，避免长串字符串；</p>
+<h2 id="加壳"><a href="#加壳" class="headerlink" title="加壳"></a>加壳</h2><p>加壳的原理是通过加密原应用的安装包中的dex文件，其主要操作方式大致如下：<br>1.准备要进行加壳的原应用安装包（以下简称原apk）、用于做壳的安装包（以下简称壳apk）；<br>2.对原Apk进行拆解获取各个部分，并将dex文件进行算法加密（以下简称加密原dex）；<br>3.将加密原dex和壳Apk中的dex进行组合，合并成为新的dex文件；<br>4.利用特制的打包工具合并生成加密后的apk；</p>
+<h2 id="反动态调试"><a href="#反动态调试" class="headerlink" title="反动态调试"></a>反动态调试</h2><p>检测到动态调试时，直接进程自杀，异常退出虚拟机，大致实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line">    * 检测动态调试</div><div class="line">    */</div><div class="line">   public void detectedDynamicDebug()&#123;</div><div class="line">       if (!BuildConfig.DEBUG)&#123;</div><div class="line">           if (Debug.isDebuggerConnected())&#123;</div><div class="line">               //进程自杀</div><div class="line">               int myPid = android.os.Process.myPid();</div><div class="line">               android.os.Process.killProcess(myPid);</div><div class="line"></div><div class="line">               //异常退出虚拟机</div><div class="line">               System.exit(1);</div><div class="line">           &#125;</div><div class="line">       &#125;</div><div class="line">   &#125;</div></pre></td></tr></table></figure></p>
+<h2 id="数据保护"><a href="#数据保护" class="headerlink" title="数据保护"></a>数据保护</h2><p>数据保护这个主要例举以下几点：<br>1.不要在客户的存放登录密码（即使你加密了），最好采用token的形式；<br>2.数据传输记得加密；<br>3.重要数据存放内置存储中，不要存放在外置存储；<br>4.加密存放在xml和数据库中的重要信息；</p>
+<h2 id="资源保护"><a href="#资源保护" class="headerlink" title="资源保护"></a>资源保护</h2><p>安装包立减1M–微信Android资源混淆打包工具<br><a href="https://mp.weixin.qq.com/s/6YUJlGmhf1-Q-5KMvZ_8_Q" target="_blank" rel="external">https://mp.weixin.qq.com/s/6YUJlGmhf1-Q-5KMvZ_8_Q</a></p>
+<p>美团Android资源混淆保护实践<br><a href="http://tech.meituan.com/mt-android-resource-obfuscation.html" target="_blank" rel="external">http://tech.meituan.com/mt-android-resource-obfuscation.html</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://jiangyuea.github.io/Blog/Blog/2017/04/01/AboutMe/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -477,7 +604,7 @@
             <h2 id="gradle配置"><a href="#gradle配置" class="headerlink" title="gradle配置"></a>gradle配置</h2><p>gradle版本2.1.2；<br>配置Project中的gradle，添加class path:”com.tencent.bugly:tinker-support:latest.release”；<br>配置app内的gradle，compile tinker工程，同时需要设置打包秘钥，后面release生成基准包；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">//tinker</div><div class="line">compile &apos;com.android.support:support-v4:23.1.0&apos;</div><div class="line">compile &quot;com.android.support:multidex:1.0.1&quot; // 多dex配置</div><div class="line">compile &apos;com.tencent.bugly:crashreport_upgrade:latest.release&apos; // 升级SDK</div></pre></td></tr></table></figure></p>
 <p>AndroidManifest.xml增加com.tencent.bugly.beta.ui.BetaActivity；</p>
 <h2 id="tinker-support配置"><a href="#tinker-support配置" class="headerlink" title="tinker-support配置"></a>tinker-support配置</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div></pre></td><td class="code"><pre><div class="line">apply plugin: &apos;com.tencent.bugly.tinker-support&apos;</div><div class="line"></div><div class="line">def bakPath = file(&quot;$&#123;buildDir&#125;/bakApk/&quot;)</div><div class="line"></div><div class="line">/**</div><div class="line"> * 此处填写每次构建生成的基准包目录</div><div class="line"> */</div><div class="line">def baseApkDir = &quot;app-0321-11-12-54&quot;</div><div class="line"></div><div class="line">/**</div><div class="line"> * 对于插件各参数的详细解析请参考</div><div class="line"> */</div><div class="line">tinkerSupport &#123;</div><div class="line"></div><div class="line">    // 开启tinker-support插件，默认值true</div><div class="line">    enable = true</div><div class="line"></div><div class="line">    // 指定归档目录，默认值当前module的子目录tinker</div><div class="line">    autoBackupApkDir = &quot;$&#123;bakPath&#125;&quot;</div><div class="line"></div><div class="line">    // 是否启用覆盖tinkerPatch配置功能，默认值false</div><div class="line">    // 开启后tinkerPatch配置不生效，即无需添加tinkerPatch</div><div class="line">    overrideTinkerPatchConfiguration = true</div><div class="line"></div><div class="line">    // 编译补丁包时，必需指定基线版本的apk，默认值为空</div><div class="line">    // 如果为空，则表示不是进行补丁包的编译</div><div class="line">    // @&#123;link tinkerPatch.oldApk &#125;</div><div class="line">    baseApk = &quot;$&#123;bakPath&#125;/$&#123;baseApkDir&#125;/app-release.apk&quot;</div><div class="line"></div><div class="line">    // 对应tinker插件applyMapping</div><div class="line">    baseApkProguardMapping = &quot;$&#123;bakPath&#125;/$&#123;baseApkDir&#125;/app-release-mapping.txt&quot;</div><div class="line"></div><div class="line">    // 对应tinker插件applyResourceMapping</div><div class="line">    baseApkResourceMapping = &quot;$&#123;bakPath&#125;/$&#123;baseApkDir&#125;/app-release-R.txt&quot;</div><div class="line"></div><div class="line">    // 构建基准包和补丁包都要指定不同的tinkerId，并且必须保证唯一性</div><div class="line">    tinkerId = &quot;base-1.0.1&quot;</div><div class="line"></div><div class="line">    // 构建多渠道补丁时使用</div><div class="line">//    buildAllFlavorsDir = &quot;$&#123;bakPath&#125;/$&#123;baseApkDir&#125;&quot;</div><div class="line"></div><div class="line">    // 是否开启反射Application模式</div><div class="line">    enableProxyApplication = true</div><div class="line"></div><div class="line">&#125;</div><div class="line"></div><div class="line">/**</div><div class="line"> * 一般来说,我们无需对下面的参数做任何的修改</div><div class="line"> * 对于各参数的详细介绍请参考:</div><div class="line"> * https://github.com/Tencent/tinker/wiki/Tinker-%E6%8E%A5%E5%85%A5%E6%8C%87%E5%8D%97</div><div class="line"> */</div><div class="line">tinkerPatch &#123;</div><div class="line">    //oldApk =&quot;$&#123;bakPath&#125;/$&#123;appName&#125;/app-release.apk&quot;</div><div class="line">    ignoreWarning = false</div><div class="line">    useSign = true</div><div class="line">    dex &#123;</div><div class="line">        dexMode = &quot;jar&quot;</div><div class="line">        pattern = [&quot;classes*.dex&quot;]</div><div class="line">        loader = []</div><div class="line">    &#125;</div><div class="line">    lib &#123;</div><div class="line">        pattern = [&quot;lib/*/*.so&quot;]</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    res &#123;</div><div class="line">        pattern = [&quot;res/*&quot;, &quot;r/*&quot;, &quot;assets/*&quot;, &quot;resources.arsc&quot;, &quot;AndroidManifest.xml&quot;]</div><div class="line">        ignoreChange = []</div><div class="line">        largeModSize = 100</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    packageConfig &#123;</div><div class="line">    &#125;</div><div class="line">    sevenZip &#123;</div><div class="line">        zipArtifact = &quot;com.tencent.mm:SevenZip:1.1.10&quot;</div><div class="line">//        path = &quot;/usr/local/bin/7za&quot;</div><div class="line">    &#125;</div><div class="line">    buildConfig &#123;</div><div class="line">        keepDexApply = false</div><div class="line">        //tinkerId = &quot;1.0.1-base&quot;</div><div class="line">        //applyMapping = &quot;$&#123;bakPath&#125;/$&#123;appName&#125;/app-release-mapping.txt&quot; //  可选，设置mapping文件，建议保持旧apk的proguard混淆方式</div><div class="line">        //applyResourceMapping = &quot;$&#123;bakPath&#125;/$&#123;appName&#125;/app-release-R.txt&quot; // 可选，设置R.txt文件，通过旧apk文件保持ResId的分配</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>PS: hexo上传git步骤，hexo clean–&gt;hexo g -d；新建文章hexo new page;</p>
+<h2 id="Tinker1-2-4-0版本对应的功能"><a href="#Tinker1-2-4-0版本对应的功能" class="headerlink" title="Tinker1.2.4.0版本对应的功能"></a>Tinker1.2.4.0版本对应的功能</h2><p>PS: hexo上传git步骤，hexo clean–&gt;hexo g -d；新建文章hexo new page;</p>
 
           
         
@@ -684,7 +811,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/Blog/archives">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">4</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
